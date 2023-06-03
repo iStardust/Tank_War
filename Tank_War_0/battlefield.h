@@ -20,6 +20,7 @@ public:
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override;
     virtual void keyReleaseEvent(QKeyEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
 private:
     Ui::Battlefield *ui;
     CTank* myTank[2];//存放红坦克、绿坦克的指针

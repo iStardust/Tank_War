@@ -12,6 +12,8 @@ Battlefield::Battlefield(QWidget *parent) :
     myTank[RED]=new CTank(this,RED);
     myTank[GREEN]->setPixmap(QPixmap::fromImage(*myTank[GREEN]->getImage()));
     myTank[RED]->setPixmap(QPixmap::fromImage(*myTank[RED]->getImage()));
+    myTank[GREEN]->setAlignment(Qt::AlignCenter);
+    myTank[RED]->setAlignment(Qt::AlignCenter);
     myTank[GREEN]->setGeometry(myTank[GREEN]->getx(),myTank[GREEN]->gety(),60,60);
     myTank[RED]->setGeometry(myTank[RED]->getx(),myTank[RED]->gety(),60,60);
     myTank[GREEN]->show();
@@ -20,7 +22,11 @@ Battlefield::Battlefield(QWidget *parent) :
     timer=new QTimer(this);
     timer->setInterval(30);
     connect(timer,SIGNAL(timeout()),this,SLOT(onTimeout()));
+    //检测到键盘有按下就启动计时器
     connect(this, SIGNAL(keyPressed()), timer, SLOT(start()));
+    //检测到keyReleased()信号就停止计时器
+    //注意：在keyReleaseEvent()中只有当所有按钮都释放才会发射keyReleased信号
+    //也就是说，这样能够实现长按按钮情况下坦克的连续移动、转弯等操作
     connect(this, SIGNAL(keyReleased()), timer, SLOT(stop()));
 
 }
@@ -117,9 +123,22 @@ void Battlefield::keyReleaseEvent(QKeyEvent *event)
         myTank[GREEN]->changeKeyPressed(newgreen);
         myTank[RED]->changeKeyPressed(newred);
     }
-    emit keyReleased();
+    //如果所有的按钮都释放了，就发射keyReleased()信号，从而结束计时器
+    bool allReleased=true;
+    for(int i=0;i<4;i++){
+        if(newred[i]){
+            allReleased=false;
+            break;
+        }
+        if(newgreen[i]){
+            allReleased=false;
+            break;
+        }
+    }
+    if(allReleased){
+        emit keyReleased();
+    }
 }
-
 
 void Battlefield::onTimeout(){
     //改变坦克位置,旋转角度,并重新显示坦克
@@ -131,8 +150,13 @@ void Battlefield::onTimeout(){
         QPixmap::fromImage(*myTank[RED]->getImage()).transformed(QTransform().rotate(myTank[RED]->getangle())));
     myTank[GREEN]->setGeometry(myTank[GREEN]->getx(),myTank[GREEN]->gety(),60,60);
     myTank[RED]->setGeometry(myTank[RED]->getx(),myTank[RED]->gety(),60,60);
+    //以下代码用于debug,查看坦克矩形的坐标是否显示正确
+    ui->testlabel->setText(myTank[RED]->getRect());
 }
-
+void Battlefield::mousePressEvent(QMouseEvent *event){
+    ui->mouse->setText("("+QString::number(event->x())+","+QString::number(event->y())+")"
+                       +"leftup:("+QString::number(myTank[RED]->getx())+","+QString::number(myTank[RED]->gety())+")");
+}
 
 Battlefield::~Battlefield()
 {
