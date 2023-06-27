@@ -10,8 +10,10 @@ Battlefield::Battlefield(QWidget *parent) :
     srand((unsigned)time(NULL));
     myTank[GREEN]=new CTank(this,GREEN);
     myTank[RED]=new CTank(this,RED);
-    myTank[GREEN]->setPixmap(QPixmap::fromImage(*myTank[GREEN]->getImage()));
-    myTank[RED]->setPixmap(QPixmap::fromImage(*myTank[RED]->getImage()));
+    myTank[GREEN]->setPixmap(
+        QPixmap::fromImage(*myTank[GREEN]->getImage()).transformed(QTransform().rotate(myTank[GREEN]->getangle())));
+    myTank[RED]->setPixmap(
+        QPixmap::fromImage(*myTank[RED]->getImage()).transformed(QTransform().rotate(myTank[RED]->getangle())));
     myTank[GREEN]->setAlignment(Qt::AlignCenter);
     myTank[RED]->setAlignment(Qt::AlignCenter);
     myTank[GREEN]->setGeometry(myTank[GREEN]->getx(),myTank[GREEN]->gety(),60,60);
@@ -20,7 +22,7 @@ Battlefield::Battlefield(QWidget *parent) :
     myTank[RED]->show();
     //时钟在按钮按下后每隔30毫秒发出timeout()信号，从而调用槽函数onTimeout()
     timer=new QTimer(this);
-    timer->setInterval(30);
+    timer->setInterval(15);
     connect(timer,SIGNAL(timeout()),this,SLOT(onTimeout()));
     //检测到键盘有按下就启动计时器
     connect(this, SIGNAL(keyPressed()), timer, SLOT(start()));
@@ -28,6 +30,8 @@ Battlefield::Battlefield(QWidget *parent) :
     //注意：在keyReleaseEvent()中只有当所有按钮都释放才会发射keyReleased信号
     //也就是说，这样能够实现长按按钮情况下坦克的连续移动、转弯等操作
     connect(this, SIGNAL(keyReleased()), timer, SLOT(stop()));
+    walls=new CWall(this);
+
 
 }
 
@@ -140,10 +144,34 @@ void Battlefield::keyReleaseEvent(QKeyEvent *event)
     }
 }
 
+void Battlefield::paintEvent(QPaintEvent*){
+    //draw walls filled with darkGray color
+    QPainter painter(this);
+    painter.setPen(Qt::black);
+    QPainterPath mypath;
+    QBrush mybrush(Qt::darkGray);
+    for(auto polygon:(walls->getWalls())){
+        mypath.clear();
+        mypath.addPolygon(polygon);
+        painter.fillPath(mypath,mybrush);
+        //painter.drawPolygon(polygonf);
+    }
+}
+
 void Battlefield::onTimeout(){
     //改变坦克位置,旋转角度,并重新显示坦克
-    myTank[GREEN]->changePosition();
-    myTank[RED]->changePosition();
+    //if crash after changing postion, go back to the old position
+    double oldx,oldy; int oldangle;
+    int tmpcolor[2]={GREEN,RED};
+    for(auto color:tmpcolor){
+        oldx=myTank[color]->getx();
+        oldy=myTank[color]->gety();
+        oldangle=myTank[color]->getangle();
+        myTank[color]->changePosition();
+        if(walls->tankCrashOnWall(myTank[color])){
+            myTank[color]->changePosition(oldx,oldy,oldangle);
+        }
+    }
     myTank[GREEN]->setPixmap(
         QPixmap::fromImage(*myTank[GREEN]->getImage()).transformed(QTransform().rotate(myTank[GREEN]->getangle())));
     myTank[RED]->setPixmap(

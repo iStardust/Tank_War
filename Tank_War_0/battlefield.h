@@ -3,9 +3,12 @@
 
 #include <QWidget>
 #include "ctank.h"
+#include "cwall.h"
 #include <QKeyEvent>
 #include <QTimer>
 #include <QTransform>
+#include <QPainter>
+#include <QPainterPath>
 namespace Ui {
 class Battlefield;
 }
@@ -21,9 +24,11 @@ protected:
     virtual void keyPressEvent(QKeyEvent *event) override;
     virtual void keyReleaseEvent(QKeyEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
+    void paintEvent(QPaintEvent*) override;
 private:
     Ui::Battlefield *ui;
     CTank* myTank[2];//存放红坦克、绿坦克的指针
+    CWall* walls;//存放墙
     QTimer* timer;//时钟指针
     void gameStart();
 signals:

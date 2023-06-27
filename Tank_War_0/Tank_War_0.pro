@@ -11,12 +11,14 @@ CONFIG += c++17
 SOURCES += \
     battlefield.cpp \
     ctank.cpp \
+    cwall.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     battlefield.h \
     ctank.h \
+    cwall.h \
     mainwindow.h
 
 FORMS += \

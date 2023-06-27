@@ -1,5 +1,23 @@
 #include "ctank.h"
+
 myRect::myRect():points{QPoint(0,0),QPoint(0,0),QPoint(0,0),QPoint(0,0)}{}
+//Construct a rectangle given its center, length, width,and rotation angle.
+myRect::myRect(QPoint&& center,int length,int width,int angle){
+    double d1[4]={0.5,0.5,-0.5,-0.5};
+    double d2[4]={-0.5,0.5,-0.5,0.5};
+    for(int i=0;i<4;i++){
+        QPointF tmpP=QPointF(QPointF(center)+QPointF(d1[i]*double(length),d2[i]*double(width)));
+        double px=tmpP.rx();
+        double py=tmpP.ry();
+        points[i]=center+QPoint((px-double(center.rx()))*cos((double)angle/180*pi)-(py-double(center.ry()))*sin((double)angle/180*pi)
+                                    ,(px-double(center.rx()))*sin((double)angle/180*pi)+(py-double(center.ry()))*cos((double)angle/180*pi));
+    }
+}
+myRect::myRect(const myRect& r){
+    for(int i=0;i<4;i++){
+        points[i]=r.points[i];
+    }
+}
 myRect::~myRect(){}
 void myRect::updateRect(QPoint&& center,int length,int width,int angle){
     double d1[4]={0.5,0.5,-0.5,-0.5};
@@ -12,11 +30,11 @@ void myRect::updateRect(QPoint&& center,int length,int width,int angle){
                            ,(px-double(center.rx()))*sin((double)angle/180*pi)+(py-double(center.ry()))*cos((double)angle/180*pi));
     }
 }
-bool myRect::checkInside(QPoint&p){
-    //
-    return false;
-}
-QString myRect::getPoints(){
+//bool myRect::checkInside(QPoint&p){
+//    //
+//    return false;
+//}
+QString myRect::getPointstr(){
     QString str="Rect:";
     for(int i=0;i<4;i++){
         str+="(";
@@ -28,11 +46,16 @@ QString myRect::getPoints(){
     return str;
 }
 
+QPoint* myRect::getPoints(){
+    return points;
+}
+
+
 CTank::CTank(QWidget *parent,int color_)
-    : QLabel(parent),v(10),tankRect()
+    : QLabel(parent),v(VELOCITY),tankRect()
 {
     //初始化坦克的角度，坐标，速度,所占据的矩形
-    angle=0;
+    angle=rand()%360;
     x=rand()%(parent->width()-60);
     y=rand()%(parent->height()-60);
     tankRect.updateRect(QPoint(x+30,y+30),50,30,angle);
@@ -44,7 +67,7 @@ CTank::CTank(QWidget *parent,int color_)
     color=color_;
     image=new QImage;
     if(color_==GREEN){
-       image->load("D:/mypkudays/Tank_War/Tank_War_0/images/greentank.png");
+        image->load("D:/mypkudays/Tank_War/Tank_War_0/images/greentank.png");
     }else if(color_==RED){
         image->load("D:/mypkudays/Tank_War/Tank_War_0/images/redtank.png");
     }
@@ -54,12 +77,17 @@ QImage* CTank::getImage(){
     return image;
 }
 QString CTank::getRect(){
-    return tankRect.getPoints()+"angle:"+QString::number(angle);
+    return tankRect.getPointstr()+"angle:"+QString::number(angle);
 }
-int CTank::getx(){
+QPoint* CTank::getPoints(){
+    return tankRect.getPoints();
+}
+
+
+double CTank::getx(){
     return x;
 }
-int CTank::gety(){
+double CTank::gety(){
     return y;
 }
 int CTank::getangle(){
@@ -80,11 +108,11 @@ void CTank::changePosition(){
     //调用这个函数，根据键盘按钮的情况更新坦克的方向和位置
     if((keyPressedCondition[RIGHT]&&!keyPressedCondition[DOWN])
         ||(keyPressedCondition[LEFT]&&keyPressedCondition[DOWN])){
-        angle+=5;
+        angle+=1;
     }
     if((keyPressedCondition[LEFT]&&!keyPressedCondition[DOWN])
         ||(keyPressedCondition[RIGHT]&&keyPressedCondition[DOWN])){
-        angle-=5;
+        angle-=1;
     }
     if(keyPressedCondition[UP]){
         y+=v*sin((double)angle/180*pi);
@@ -98,5 +126,12 @@ void CTank::changePosition(){
     if(angle<0){
         angle=360+angle;
     }
+    tankRect.updateRect(QPoint(x+30,y+30),50,30,angle);
+}
+void CTank::changePosition(double x,double y,int angle){
+    //重载 根据给定的坐标和角度更新坦克的位置
+    this->x=x;
+    this->y=y;
+    this->angle=angle;
     tankRect.updateRect(QPoint(x+30,y+30),50,30,angle);
 }
