@@ -16,15 +16,31 @@ CWall::CWall(QWidget *parent)
         int px=rand()%x;
         int py=rand()%y;
         int l=rand()%(x/3);
-        int m=rand()%2;
+        int m=rand()%4;
         if(m==0){
             walls.push_back(QPolygon(QRect(QPoint(px-l/2,py-5),QPoint(px+l/2,py+5))));
         }
         if(m==1){
             walls.push_back(QPolygon(QRect(QPoint(px-5,py-l/2),QPoint(px+5,py+l/2))));
         }
+        if(m==2){
+            QPolygon w;
+            w<<QPoint(px-l/2,py-l/2)<<QPoint(px+l/2,py+l/2)
+              <<QPoint(px+l/2-15,py+l/2)<<QPoint(px-l/2-15,py-l/2);
+            walls.push_back(w);
+        }
+        if(m==3){
+            QPolygon w;
+            w<<QPoint(px-l/2,py+l/2)<<QPoint(px+l/2,py-l/2)
+              <<QPoint(px+l/2-15,py-l/2)<<QPoint(px-l/2-15,py+l/2);
+            walls.push_back(w);
+
+        }
 
     }
+}
+CWall::~CWall(){
+    walls.clear();
 }
 
 const std::vector<QPolygon>& CWall::getWalls(){

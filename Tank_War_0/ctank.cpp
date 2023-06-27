@@ -13,6 +13,7 @@ myRect::myRect(QPoint&& center,int length,int width,int angle){
                                     ,(px-double(center.rx()))*sin((double)angle/180*pi)+(py-double(center.ry()))*cos((double)angle/180*pi));
     }
 }
+//copy constructor
 myRect::myRect(const myRect& r){
     for(int i=0;i<4;i++){
         points[i]=r.points[i];

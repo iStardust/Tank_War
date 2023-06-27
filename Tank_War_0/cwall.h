@@ -13,6 +13,7 @@ class CWall : public QLabel
     Q_OBJECT
 public:
     explicit CWall(QWidget *parent = nullptr);
+    ~CWall();
     //判断坦克是否撞墙
     bool tankCrashOnWall(CTank* tank);
     //返回墙

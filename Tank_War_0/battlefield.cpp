@@ -31,8 +31,19 @@ Battlefield::Battlefield(QWidget *parent) :
     //也就是说，这样能够实现长按按钮情况下坦克的连续移动、转弯等操作
     connect(this, SIGNAL(keyReleased()), timer, SLOT(stop()));
     walls=new CWall(this);
-
-
+    int tmpcolor[2]={GREEN,RED};
+    bool wallsValid=true;
+    while(true){
+        for(auto color:tmpcolor){
+            if(walls->tankCrashOnWall(myTank[color])){
+                delete walls;
+                walls=new CWall(this);
+                wallsValid=false;
+                break;
+            }
+        }
+        if(wallsValid){break;}
+    }
 }
 
 void Battlefield::keyPressEvent(QKeyEvent *event)
