@@ -19,10 +19,10 @@ const int UP=1;
 const int DOWN=2;
 const int LEFT=3;
 const double pi = acos(-1);
-//坦克的速度
-const double VELOCITY=2;
-
-
+//坦克的速度、角度的改变量、子弹数量
+const double TANKVELOCITY=0.5;
+const double DELTA_ANGLE=0.5;
+const int BULLETSNUM=5;
 
 class myRect{
 private:
@@ -54,11 +54,15 @@ public:
     void changeKeyPressed(bool *newcondition);
     //改变坦克的位置
     void changePosition();
-    void changePosition(double x,double y,int angle);
-    //获取坦克的坐标,旋转角度,按钮按下情况
+    void changePosition(double x,double y,double angle);
+    //改变坦克的子弹数量
+    void changeNumOfBullets(int delta);
+    //获取坦克的颜色坐标,旋转角度,按钮按下情况
+    int getcolor();
+    int getNumOfBullets();
     double getx();
     double gety();
-    int getangle();
+    double getangle();
     bool* getKeyPressed();
     //获取图片
     QImage* getImage();
@@ -67,15 +71,16 @@ public:
     //获取四个坐标
     QPoint* getPoints();
 private:
-    int angle;//角度
+    double angle;//角度
     //上下左右按钮是否按下
     bool keyPressedCondition[4];
-    //坦克的坐标、速度、颜色、所占据的矩形方框等参数
+    //坦克的坐标、速度、颜色、所占据的矩形方框、拥有的子弹数量等参数
     double x;
     double y;
     const double v;
     int color;
     myRect tankRect;
+    int numOfBullets;
     //QPoint[4];
     //坦克图片
     QImage* image;

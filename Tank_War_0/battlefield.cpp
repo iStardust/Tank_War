@@ -6,6 +6,7 @@ Battlefield::Battlefield(QWidget *parent) :
     ui(new Ui::Battlefield)
 {
     ui->setupUi(this);
+
     //加载红绿坦克
     srand((unsigned)time(NULL));
     myTank[GREEN]=new CTank(this,GREEN);
@@ -20,20 +21,27 @@ Battlefield::Battlefield(QWidget *parent) :
     myTank[RED]->setGeometry(myTank[RED]->getx(),myTank[RED]->gety(),60,60);
     myTank[GREEN]->show();
     myTank[RED]->show();
-    //时钟在按钮按下后每隔30毫秒发出timeout()信号，从而调用槽函数onTimeout()
-    timer=new QTimer(this);
-    timer->setInterval(15);
-    connect(timer,SIGNAL(timeout()),this,SLOT(onTimeout()));
-    //检测到键盘有按下就启动计时器
-    connect(this, SIGNAL(keyPressed()), timer, SLOT(start()));
-    //检测到keyReleased()信号就停止计时器
-    //注意：在keyReleaseEvent()中只有当所有按钮都释放才会发射keyReleased信号
-    //也就是说，这样能够实现长按按钮情况下坦克的连续移动、转弯等操作
-    connect(this, SIGNAL(keyReleased()), timer, SLOT(stop()));
+
+    //设置坦克与子弹的timer
+    timerForTank=new QTimer(this);
+    timerForTank->setInterval(3);
+    connect(timerForTank,SIGNAL(timeout()),this,SLOT(tankTimeout()));
+    connect(this, SIGNAL(tankKeyPressed()), timerForTank, SLOT(start()));
+    connect(this, SIGNAL(tankKeyReleased()), timerForTank, SLOT(stop()));
+
+    timerForBullet=new QTimer(this);
+    timerForBullet->setInterval(3);
+    connect(timerForBullet,SIGNAL(timeout()),this,SLOT(bulletTimeout()));
+    connect(this,SIGNAL(bulletKeyPressed()),timerForBullet,SLOT(start()));
+    connect(this,SIGNAL(allBulletDestroyed()),timerForBullet,SLOT(stop()));
+
+
+    //constuct valid walls
     walls=new CWall(this);
     int tmpcolor[2]={GREEN,RED};
     bool wallsValid=true;
     while(true){
+        wallsValid=true;
         for(auto color:tmpcolor){
             if(walls->tankCrashOnWall(myTank[color])){
                 delete walls;
@@ -42,7 +50,9 @@ Battlefield::Battlefield(QWidget *parent) :
                 break;
             }
         }
-        if(wallsValid){break;}
+        if(wallsValid){
+            break;
+        }
     }
 }
 
@@ -53,6 +63,8 @@ void Battlefield::keyPressEvent(QKeyEvent *event)
     bool* newgreen=new bool[4];
     bool* oldred=myTank[RED]->getKeyPressed();
     bool* oldgreen=myTank[GREEN]->getKeyPressed();
+    //判断是否按下了坦克移动或者子弹发射的按键
+    bool tankPressed=false,bulletPressed=false;
     for(int i=0;i<4;i++){
         newred[i]=oldred[i];
         newgreen[i]=oldgreen[i];
@@ -63,35 +75,85 @@ void Battlefield::keyPressEvent(QKeyEvent *event)
         switch(event->key()){
         case Qt::Key_Right:
             newgreen[RIGHT]=true;
+            tankPressed=true;
             break;
         case Qt::Key_Up:
             newgreen[UP]=true;
+            tankPressed=true;
             break;
         case Qt::Key_Left:
             newgreen[LEFT]=true;
+            tankPressed=true;
             break;
         case Qt::Key_Down:
             newgreen[DOWN]=true;
+            tankPressed=true;
             break;
         case Qt::Key_W:
             newred[UP]=true;
+            tankPressed=true;
             break;
         case Qt::Key_A:
             newred[LEFT]=true;
+            tankPressed=true;
             break;
         case Qt::Key_S:
             newred[DOWN]=true;
+            tankPressed=true;
             break;
         case Qt::Key_D:
             newred[RIGHT]=true;
+            tankPressed=true;
             break;
+        case Qt::Key_Space:
+        {
+            if(myTank[RED]->getNumOfBullets()){
+                myTank[RED]->changeNumOfBullets(-1);
+                CBullet* newBullet=new CBullet(this,myTank[RED]);
+                QTimer* newDelTimer=new QTimer(this);
+                newDelTimer->setInterval(3000);
+                newDelTimer->start();
+                connect(newDelTimer,SIGNAL(timeout()),this,SLOT(delBullet()));
+                myBullets.push_back(std::make_pair(newBullet,newDelTimer));
+                newBullet->setPixmap(QPixmap::fromImage(*newBullet->getimage()));
+                newBullet->setAlignment(Qt::AlignCenter);
+                newBullet->setGeometry(newBullet->getx(),newBullet->gety(),10,10);
+                newBullet->show();
+                bulletPressed=true;
+            }
+            break;
+        }
+        case Qt::Key_Return:
+        {
+            if(myTank[GREEN]->getNumOfBullets()){
+                myTank[GREEN]->changeNumOfBullets(-1);
+                CBullet* newBullet=new CBullet(this,myTank[GREEN]);
+                QTimer* newDelTimer=new QTimer(this);
+                newDelTimer->setInterval(3000);
+                newDelTimer->start();
+                connect(newDelTimer,SIGNAL(timeout()),this,SLOT(delBullet()));
+                myBullets.push_back(std::make_pair(newBullet,newDelTimer));
+                newBullet->setPixmap(QPixmap::fromImage(*newBullet->getimage()));
+                newBullet->setAlignment(Qt::AlignCenter);
+                newBullet->setGeometry(newBullet->getx(),newBullet->gety(),10,10);
+                newBullet->show();
+                bulletPressed=true;
+            }
+            break;
+        }
         default:
             break;
         }
         myTank[GREEN]->changeKeyPressed(newgreen);
         myTank[RED]->changeKeyPressed(newred);
     }
-    emit keyPressed();
+    if(tankPressed){
+        emit tankKeyPressed();
+    }
+    if(bulletPressed){
+        emit bulletKeyPressed();
+    }
+
 }
 void Battlefield::keyReleaseEvent(QKeyEvent *event)
 {
@@ -138,7 +200,7 @@ void Battlefield::keyReleaseEvent(QKeyEvent *event)
         myTank[GREEN]->changeKeyPressed(newgreen);
         myTank[RED]->changeKeyPressed(newred);
     }
-    //如果所有的按钮都释放了，就发射keyReleased()信号，从而结束计时器
+    //如果所有的按钮都释放了，就发射tankKeyReleased()信号，从而结束计时器
     bool allReleased=true;
     for(int i=0;i<4;i++){
         if(newred[i]){
@@ -151,7 +213,7 @@ void Battlefield::keyReleaseEvent(QKeyEvent *event)
         }
     }
     if(allReleased){
-        emit keyReleased();
+        emit tankKeyReleased();
     }
 }
 
@@ -169,7 +231,7 @@ void Battlefield::paintEvent(QPaintEvent*){
     }
 }
 
-void Battlefield::onTimeout(){
+void Battlefield::tankTimeout(){
     //改变坦克位置,旋转角度,并重新显示坦克
     //if crash after changing postion, go back to the old position
     double oldx,oldy; int oldangle;
@@ -192,6 +254,28 @@ void Battlefield::onTimeout(){
     //以下代码用于debug,查看坦克矩形的坐标是否显示正确
     ui->testlabel->setText(myTank[RED]->getRect());
 }
+void Battlefield::bulletTimeout(){
+    //遍历所有子弹，改变其位置，重新显示
+    for(auto pair:myBullets){
+        auto bullet=pair.first;
+        bullet->changePosition();
+        bullet->setGeometry(bullet->getx(),bullet->gety(),10,10);
+    }
+}
+void Battlefield::delBullet(){
+    //删掉第一个子弹和他对应的计时器
+    auto pair=myBullets.front();
+    myTank[pair.first->getcolor()]->changeNumOfBullets(1);
+    delete pair.first;
+    delete pair.second;
+    myBullets.pop_front();
+    //如果所有子弹都被删除了，释放信号
+    if(myBullets.empty()){
+        emit allBulletDestroyed();
+    }
+}
+
+
 void Battlefield::mousePressEvent(QMouseEvent *event){
     ui->mouse->setText("("+QString::number(event->x())+","+QString::number(event->y())+")"
                        +"leftup:("+QString::number(myTank[RED]->getx())+","+QString::number(myTank[RED]->gety())+")");
@@ -202,7 +286,8 @@ Battlefield::~Battlefield()
     delete ui;
     delete myTank[0];
     delete myTank[1];
-    delete timer;
+    delete timerForTank;
+    delete timerForBullet;
 }
 void gameStart(){
 

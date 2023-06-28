@@ -53,7 +53,8 @@ QPoint* myRect::getPoints(){
 
 
 CTank::CTank(QWidget *parent,int color_)
-    : QLabel(parent),v(VELOCITY),tankRect()
+    : QLabel(parent),v(TANKVELOCITY),tankRect()
+    ,numOfBullets(BULLETSNUM)
 {
     //初始化坦克的角度，坐标，速度,所占据的矩形
     angle=rand()%360;
@@ -84,14 +85,19 @@ QPoint* CTank::getPoints(){
     return tankRect.getPoints();
 }
 
-
+int CTank::getcolor(){
+    return color;
+}
+int CTank::getNumOfBullets(){
+    return numOfBullets;
+}
 double CTank::getx(){
     return x;
 }
 double CTank::gety(){
     return y;
 }
-int CTank::getangle(){
+double CTank::getangle(){
     return angle;
 }
 bool* CTank::getKeyPressed(){
@@ -109,30 +115,36 @@ void CTank::changePosition(){
     //调用这个函数，根据键盘按钮的情况更新坦克的方向和位置
     if((keyPressedCondition[RIGHT]&&!keyPressedCondition[DOWN])
         ||(keyPressedCondition[LEFT]&&keyPressedCondition[DOWN])){
-        angle+=1;
+        angle+=DELTA_ANGLE;
     }
     if((keyPressedCondition[LEFT]&&!keyPressedCondition[DOWN])
         ||(keyPressedCondition[RIGHT]&&keyPressedCondition[DOWN])){
-        angle-=1;
+        angle-=DELTA_ANGLE;
     }
     if(keyPressedCondition[UP]){
-        y+=v*sin((double)angle/180*pi);
-        x+=v*cos((double)angle/180*pi);
+        y+=v*sin(angle/180*pi);
+        x+=v*cos(angle/180*pi);
     }
     if(keyPressedCondition[DOWN]){
-        y-=v*sin((double)angle/180*pi);
-        x-=v*cos((double)angle/180*pi);
+        y-=v*sin(angle/180*pi);
+        x-=v*cos(angle/180*pi);
     }
-    angle=angle%360;
+    if(angle>360){
+        angle-=360;
+    }
     if(angle<0){
         angle=360+angle;
     }
     tankRect.updateRect(QPoint(x+30,y+30),50,30,angle);
 }
-void CTank::changePosition(double x,double y,int angle){
+void CTank::changePosition(double x,double y,double angle){
     //重载 根据给定的坐标和角度更新坦克的位置
     this->x=x;
     this->y=y;
     this->angle=angle;
     tankRect.updateRect(QPoint(x+30,y+30),50,30,angle);
+}
+
+void CTank::changeNumOfBullets(int delta){
+    numOfBullets+=delta;
 }

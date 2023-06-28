@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     battlefield.cpp \
+    cbullet.cpp \
     ctank.cpp \
     cwall.cpp \
     main.cpp \
@@ -17,6 +18,7 @@ SOURCES += \
 
 HEADERS += \
     battlefield.h \
+    cbullet.h \
     ctank.h \
     cwall.h \
     mainwindow.h

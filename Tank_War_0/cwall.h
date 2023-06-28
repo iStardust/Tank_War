@@ -8,6 +8,7 @@
 #include <vector>
 #include "ctank.h"
 
+
 class CWall : public QLabel
 {
     Q_OBJECT
