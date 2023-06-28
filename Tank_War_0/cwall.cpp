@@ -11,12 +11,12 @@ CWall::CWall(QWidget *parent)
     walls.push_back(QPolygon(QRect(QPoint(x-10,0),QPoint(x,y))));
     walls.push_back(QPolygon(QRect(QPoint(0,y-10),QPoint(x,y))));
     //再随机生成墙壁
-    int num=20;
+    int num=15;
     while(num--){
         int px=rand()%x;
         int py=rand()%y;
-        int l=rand()%(x/5);
-        int m=rand()%4;
+        int l=rand()%(x/5)+(x/10);
+        int m=num%4;
         //生成横竖撇捺的墙
         if(m==0){
             walls.push_back(QPolygon(QRect(QPoint(px-l/2,py-5),QPoint(px+l/2,py+5))));

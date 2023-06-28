@@ -36,7 +36,7 @@ Battlefield::Battlefield(QWidget *parent) :
     connect(this,SIGNAL(allBulletDestroyed()),timerForBullet,SLOT(stop()));
 
 
-    //constuct valid walls
+    //construct valid walls
     walls=new CWall(this);
     int tmpcolor[2]={GREEN,RED};
     bool wallsValid=true;
@@ -252,13 +252,15 @@ void Battlefield::tankTimeout(){
     myTank[GREEN]->setGeometry(myTank[GREEN]->getx(),myTank[GREEN]->gety(),60,60);
     myTank[RED]->setGeometry(myTank[RED]->getx(),myTank[RED]->gety(),60,60);
     //以下代码用于debug,查看坦克矩形的坐标是否显示正确
-    ui->testlabel->setText(myTank[RED]->getRect());
+   // ui->testlabel->setText(myTank[RED]->getRect());
 }
 void Battlefield::bulletTimeout(){
     //遍历所有子弹，改变其位置，重新显示
     for(auto pair:myBullets){
         auto bullet=pair.first;
+        //在这里需要添加一个子弹是否反弹的判断
         bullet->changePosition();
+
         bullet->setGeometry(bullet->getx(),bullet->gety(),10,10);
     }
 }
@@ -277,8 +279,8 @@ void Battlefield::delBullet(){
 
 
 void Battlefield::mousePressEvent(QMouseEvent *event){
-    ui->mouse->setText("("+QString::number(event->x())+","+QString::number(event->y())+")"
-                       +"leftup:("+QString::number(myTank[RED]->getx())+","+QString::number(myTank[RED]->gety())+")");
+//    ui->mouse->setText("("+QString::number(event->x())+","+QString::number(event->y())+")"
+//                       +"leftup:("+QString::number(myTank[RED]->getx())+","+QString::number(myTank[RED]->gety())+")");
 }
 
 Battlefield::~Battlefield()
@@ -288,6 +290,8 @@ Battlefield::~Battlefield()
     delete myTank[1];
     delete timerForTank;
     delete timerForBullet;
+    delete walls;
+    myBullets.clear();
 }
 void gameStart(){
 

@@ -9,7 +9,7 @@
 #include "ctank.h"
 
 //子弹的速度
-const double BULLETVELOCITY=0.3;
+const double BULLETVELOCITY=0.6;
 //子弹图片的尺寸
 const int size=10;
 
@@ -23,7 +23,9 @@ public:
     double gety();
     double getangle();
     QImage* getimage();
+    //处理子弹的移动和反弹
     void changePosition();
+    void rebound();
 private:
     //子弹所属何种颜色的坦克，子弹的坐标，速度，角度
     int color;
