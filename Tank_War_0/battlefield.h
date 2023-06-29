@@ -16,6 +16,11 @@ namespace Ui {
 class Battlefield;
 }
 
+const int ONGOING=-1;
+const int TIE=0;
+const int GREENWIN=1;
+const int REDWIN=2;
+
 class Battlefield : public QWidget
 {
     Q_OBJECT
@@ -33,10 +38,14 @@ private:
     CTank* myTank[2];//存放红坦克、绿坦克的指针
     std::deque<std::pair<CBullet*,QTimer*> > myBullets;//存放所有的子弹和其对应的析构时钟
     CWall* walls;//存放墙
+
     //时钟
     QTimer* timerForTank;
     QTimer* timerForBullet;
+    QTimer* timerForChecking;
+
     void gameStart();
+    int checkGame();
 signals:
     //坦克的移动与停止移动
     void tankKeyPressed();
@@ -52,6 +61,8 @@ private slots:
     void bulletTimeout();
     //删除一个最早出现的子弹
     void delBullet();
+    //检查游戏情况
+    void gameCheck();
 };
 
 #endif // BATTLEFIELD_H

@@ -70,6 +70,10 @@ public:
     QString getRect();
     //获取四个坐标
     QPoint* getPoints();
+    //获取子弹发射的坐标
+    QPointF getBulletPos();
+    //判断两艘坦克是否相撞
+    static bool tankCrashed(CTank* t1,CTank* t2);
 private:
     double angle;//角度
     //上下左右按钮是否按下

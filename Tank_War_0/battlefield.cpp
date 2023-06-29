@@ -11,6 +11,16 @@ Battlefield::Battlefield(QWidget *parent) :
     srand((unsigned)time(NULL));
     myTank[GREEN]=new CTank(this,GREEN);
     myTank[RED]=new CTank(this,RED);
+    while(true){
+        if(CTank::tankCrashed(myTank[GREEN],myTank[RED])){
+            delete myTank[GREEN];
+            delete myTank[RED];
+            myTank[GREEN]=new CTank(this,GREEN);
+            myTank[RED]=new CTank(this,RED);
+        }else{
+            break;
+        }
+    }
     myTank[GREEN]->setPixmap(
         QPixmap::fromImage(*myTank[GREEN]->getImage()).transformed(QTransform().rotate(myTank[GREEN]->getangle())));
     myTank[RED]->setPixmap(
@@ -35,6 +45,11 @@ Battlefield::Battlefield(QWidget *parent) :
     connect(this,SIGNAL(bulletKeyPressed()),timerForBullet,SLOT(start()));
     connect(this,SIGNAL(allBulletDestroyed()),timerForBullet,SLOT(stop()));
 
+    //设置检查游戏情况的timer
+    timerForChecking=new QTimer(this);
+    timerForChecking->setInterval(3);
+    connect(timerForChecking,SIGNAL(timeout()),this,SLOT(gameCheck()));
+    timerForChecking->start();
 
     //construct valid walls
     walls=new CWall(this);
@@ -276,7 +291,33 @@ void Battlefield::delBullet(){
         emit allBulletDestroyed();
     }
 }
-
+void Battlefield::gameCheck(){
+    //检查游戏情况
+    int gameCondition=checkGame();
+    if(gameCondition!=ONGOING){
+        timerForChecking->stop();
+        timerForChecking->disconnect();
+        timerForBullet->stop();
+        timerForBullet->disconnect();
+        timerForTank->stop();
+        timerForTank->disconnect();
+        QImage explosion("D:/mypkudays/Tank_War/Tank_War_0/images/explosion.png");
+        QImage greenwin("D:/mypkudays/Tank_War/Tank_War_0/images/greenwin.png");
+        QImage redwin("D:/mypkudays/Tank_War/Tank_War_0/images/redwin.png");
+        if(gameCondition==TIE){
+            myTank[RED]->setPixmap(QPixmap::fromImage(explosion));
+            myTank[GREEN]->setPixmap(QPixmap::fromImage(explosion));
+            myTank[GREEN]->setGeometry(myTank[GREEN]->getx(),myTank[GREEN]->gety(),60,60);
+            myTank[RED]->setGeometry(myTank[RED]->getx(),myTank[RED]->gety(),60,60);
+        }else if(gameCondition==GREENWIN){
+            myTank[RED]->setPixmap(QPixmap::fromImage(explosion));
+            myTank[RED]->setGeometry(myTank[RED]->getx(),myTank[RED]->gety(),60,60);
+        }else if(gameCondition==REDWIN){
+            myTank[GREEN]->setPixmap(QPixmap::fromImage(explosion));
+            myTank[GREEN]->setGeometry(myTank[GREEN]->getx(),myTank[GREEN]->gety(),60,60);
+        }
+    }
+}
 
 void Battlefield::mousePressEvent(QMouseEvent *event){
 //    ui->mouse->setText("("+QString::number(event->x())+","+QString::number(event->y())+")"
@@ -295,5 +336,33 @@ Battlefield::~Battlefield()
 }
 void gameStart(){
 
+}
+int Battlefield::checkGame(){
+    if(CTank::tankCrashed(myTank[GREEN],myTank[RED])){
+        return TIE;
+    }
+    QPolygon greentank,redtank;
+    QPoint* p1=myTank[GREEN]->getPoints();
+    QPoint* p2=myTank[RED]->getPoints();
+    for(int i=0;i<4;i++){
+        greentank<<p1[i];
+        redtank<<p2[i];
+    }
+    for(auto it:myBullets){
+        CBullet* bullet=it.first;
+        int bx=bullet->getx(),by=bullet->gety();
+        QPolygon bulletPo;
+        bulletPo<<QPoint(bx,by)<<QPoint(bx,by+10)<<QPoint(bx+10,by+10)<<QPoint(bx+10,by);
+        if(bulletPo.intersects(greentank)&&bulletPo.intersects(redtank)){
+            return TIE;
+        }
+        if(bulletPo.intersects(greentank)){
+            return REDWIN;
+        }
+        if(bulletPo.intersects(redtank)){
+            return GREENWIN;
+        }
+    }
+    return ONGOING;
 }
 

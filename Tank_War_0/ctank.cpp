@@ -3,7 +3,7 @@
 myRect::myRect():points{QPoint(0,0),QPoint(0,0),QPoint(0,0),QPoint(0,0)}{}
 //Construct a rectangle given its center, length, width,and rotation angle.
 myRect::myRect(QPoint&& center,int length,int width,int angle){
-    double d1[4]={0.5,0.5,-0.5,-0.5};
+    double d1[4]={0.4,0.4,-0.5,-0.5};
     double d2[4]={-0.5,0.5,-0.5,0.5};
     for(int i=0;i<4;i++){
         QPointF tmpP=QPointF(QPointF(center)+QPointF(d1[i]*double(length),d2[i]*double(width)));
@@ -21,7 +21,7 @@ myRect::myRect(const myRect& r){
 }
 myRect::~myRect(){}
 void myRect::updateRect(QPoint&& center,int length,int width,int angle){
-    double d1[4]={0.5,0.5,-0.5,-0.5};
+    double d1[4]={0.4,0.4,-0.5,-0.5};
     double d2[4]={-0.5,0.5,-0.5,0.5};
     for(int i=0;i<4;i++){
         QPointF tmpP=QPointF(QPointF(center)+QPointF(d1[i]*double(length),d2[i]*double(width)));
@@ -84,7 +84,20 @@ QString CTank::getRect(){
 QPoint* CTank::getPoints(){
     return tankRect.getPoints();
 }
-
+QPointF CTank::getBulletPos(){
+    QPointF center(x+30,y+30);
+    double d1[2]={0.6,0.6};
+    double d2[2]={-0.5,0.5};
+    QPointF tmppoints[2];
+    for(int i=0;i<2;i++){
+        QPointF tmpP=QPointF(QPointF(center)+QPointF(d1[i]*50.0,d2[i]*30.0));
+        double px=tmpP.rx();
+        double py=tmpP.ry();
+        tmppoints[i]=center+QPoint((px-double(center.rx()))*cos((double)angle/180*pi)-(py-double(center.ry()))*sin((double)angle/180*pi)
+                                    ,(px-double(center.rx()))*sin((double)angle/180*pi)+(py-double(center.ry()))*cos((double)angle/180*pi));
+    }
+    return (tmppoints[0]+tmppoints[1])/2;
+}
 int CTank::getcolor(){
     return color;
 }
@@ -147,4 +160,15 @@ void CTank::changePosition(double x,double y,double angle){
 
 void CTank::changeNumOfBullets(int delta){
     numOfBullets+=delta;
+}
+
+bool CTank::tankCrashed(CTank* t1,CTank* t2){
+    QPoint* p1=t1->getPoints();
+    QPoint* p2=t2->getPoints();
+    QPolygon po1,po2;
+    for(int i=0;i<4;i++){
+        po1<<p1[i];
+        po2<<p2[i];
+    }
+    return po1.intersects(po2);
 }

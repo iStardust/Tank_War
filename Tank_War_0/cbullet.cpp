@@ -5,9 +5,8 @@ CBullet::CBullet(QWidget *parent,CTank *tank)
 {
     color=tank->getcolor();
     angle=tank->getangle();
-    QPoint* points=tank->getPoints();
-    x=(points[0].x()+points[1].x())/2-5;
-    y=(points[0].y()+points[1].y())/2-5;
+    x=tank->getBulletPos().x()-5;
+    y=tank->getBulletPos().y()-5;
     image=new QImage;
     image->load("D:/mypkudays/Tank_War/Tank_War_0/images/bullet.png");
 }
