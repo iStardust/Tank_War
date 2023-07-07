@@ -25,7 +25,7 @@ public:
     QImage* getimage();
     //处理子弹的移动和反弹
     void changePosition();
-    void rebound();
+    void rebound(std::vector<QPolygon> Walls);
 private:
     //子弹所属何种颜色的坦克，子弹的坐标，速度，角度
     int color;

@@ -18,6 +18,6 @@ public:
 private:
     Ui::MainWindow *ui;
 private slots:
-
+    void recievemessage();
 };
 #endif // MAINWINDOW_H
